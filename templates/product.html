@@ -2,67 +2,356 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <title>{{ p.nama }} - Detail Produk</title>
+  <title>{{ p.nama_produk }} - Detail Produk</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
+    :root {
+      --bg: #020617;
+      --card: #020617;
+      --card-inner: #0b1120;
+      --border: #1f2937;
+      --accent: #22c55e;
+      --accent-soft: rgba(34,197,94,0.16);
+      --muted: #94a3b8;
+      --toggle-bg: #020617;
+      --toggle-border: #1f2937;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
-      font-family: system-ui, Arial, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       margin: 0;
-      background: #0b1220;
+      background: radial-gradient(circle at top, #1d283a, #020617);
       color: #e5e7eb;
       display: flex;
       justify-content: center;
       align-items: flex-start;
       min-height: 100vh;
+      padding: 18px 12px;
     }
-    .wrap { width: 100%; max-width: 520px; padding: 20px; }
-    .card {
-      background: #111827;
-      border: 1px solid #1f2937;
-      border-radius: 14px;
-      padding: 18px;
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
-    }
-    .title { margin: 0 0 6px 0; font-size: 22px; text-align: center; }
-    .price { margin: 0; font-weight: 700; font-size: 20px; color: #86efac; text-align: center; }
-    .muted { color: #94a3b8; font-size: 14px; }
-    .divider { height: 1px; background: #1f2937; margin: 14px 0; }
-    .toggle {
+
+    .wrap {
       width: 100%;
-      text-align: center;
-      border: 1px solid #334155;
-      border-radius: 10px;
-      padding: 10px;
-      background: #0f172a;
+      max-width: 520px;
+    }
+
+    .card {
+      position: relative;
+      background: radial-gradient(circle at top left, #020617, #020617);
+      border-radius: 20px;
+      padding: 20px 16px 20px;
+      border: 1px solid rgba(148,163,184,0.22);
+      box-shadow:
+        0 22px 45px rgba(0,0,0,0.75),
+        0 0 0 1px rgba(15,23,42,0.9);
+      overflow: hidden;
+      animation: card-in 360ms ease-out;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background:
+        radial-gradient(circle at top left, rgba(56,189,248,0.16), transparent 60%),
+        radial-gradient(circle at bottom right, rgba(34,197,94,0.12), transparent 65%);
+      opacity: 0.9;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    @keyframes card-in {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .title-wrap {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 44px;
+      line-height: 1.25;
+      text-align: left;
+      letter-spacing: 0.01em;
+    }
+
+    .price {
+      margin: 6px 0 0;
+      font-weight: 800;
+      font-size: 64px;
+      color: var(--accent);
+      text-align: left;
+    }
+
+    .chip-price {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(22,163,74,0.1);
+      border: 1px solid rgba(34,197,94,0.3);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .chip-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 8px rgba(34,197,94,0.7);
+    }
+
+    /* Tombol barcode di kanan atas */
+    .barcode-icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.65);
+      background: radial-gradient(circle at top, #0f172a, #020617);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition:
+        transform 0.12s ease,
+        box-shadow 0.12s ease,
+        border-color 0.12s ease,
+        background 0.12s ease;
+    }
+
+    .barcode-icon-btn-inner {
+      width: 16px;
+      height: 16px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+    }
+
+    .barcode-line {
+      width: 100%;
+      border-radius: 999px;
+      background: #e5e7eb;
+    }
+
+    .barcode-icon-btn:hover {
+      transform: translateY(-1px) scale(1.03);
+      border-color: rgba(248,250,252,0.85);
+      box-shadow: 0 10px 22px rgba(15,23,42,0.9);
+      background: radial-gradient(circle at top, #111827, #020617);
+    }
+
+    .barcode-icon-btn.active {
+      border-color: var(--accent);
+      box-shadow:
+        0 0 0 1px rgba(34,197,94,0.6),
+        0 0 25px rgba(34,197,94,0.4);
+    }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, #1f2937, transparent);
+      margin: 12px -4px 8px;
+    }
+
+    .section {
+      margin-top: 10px;
+    }
+
+    .toggle-desc {
+      width: 100%;
+      text-align: left;
+      border-radius: 12px;
+      padding: 9px 11px;
+      background: rgba(15,23,42,0.92);
+      border: 1px solid var(--toggle-border);
       color: #e2e8f0;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14px;
+      transition:
+        background 0.12s ease,
+        border-color 0.12s ease,
+        transform 0.08s ease;
     }
-    .hidden { display: none; }
-    .section { margin-top: 12px; }
-    .barcode-card {
-      margin-top: 10px;
-      background: #0f172a;
-      border: 1px dashed #334155;
+
+    .toggle-desc:hover {
+      background: rgba(15,23,42,0.98);
+      border-color: #334155;
+      transform: translateY(-0.5px);
+    }
+
+    .toggle-label-main {
+      font-weight: 500;
+    }
+
+    .toggle-label-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .chevron {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: #9ca3af;
+      transition:
+        transform 0.16s ease,
+        border-color 0.16s ease,
+        background 0.16s ease,
+        color 0.16s ease;
+    }
+
+    .toggle-desc.open .chevron {
+      transform: rotate(90deg);
+      border-color: var(--accent);
+      background: rgba(34,197,94,0.12);
+      color: #bbf7d0;
+    }
+
+    .desc-body-wrap {
+      overflow: hidden;
+      transition: max-height 0.22s ease, opacity 0.22s ease, transform 0.22s ease;
+      max-height: 0;
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+
+    .desc-body-wrap.show {
+      max-height: 300px;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .desc-body {
+      margin-top: 8px;
+      padding: 10px 10px 8px;
       border-radius: 12px;
+      background: radial-gradient(circle at top left, rgba(15,23,42,1), rgba(15,23,42,0.9));
+      border: 1px solid #111827;
+      line-height: 1.7;
+      font-size: 14px;
+      text-align: center;
+      color: #e5e7eb;
+    }
+
+    .barcode-card {
+      margin-top: 12px;
+      background: radial-gradient(circle at top, rgba(15,23,42,1), rgba(15,23,42,0.96));
+      border-radius: 14px;
+      border: 1px dashed rgba(148,163,184,0.4);
       padding: 14px;
       text-align: center;
+      box-shadow: 0 14px 35px rgba(15,23,42,0.8);
+      transform-origin: top;
+      transform: scaleY(0.9) translateY(-6px);
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition:
+        opacity 0.2s ease,
+        max-height 0.2s ease,
+        transform 0.2s ease;
     }
-    .btn {
-      display: inline-block;
-      padding: 8px 12px;
-      border-radius: 10px;
-      background: #2563eb;
-      color: #fff;
-      text-decoration: none;
-      border: 0;
-      cursor: pointer;
+
+    .barcode-card.show {
+      opacity: 1;
+      max-height: 260px;
+      transform: scaleY(1) translateY(0);
     }
-    .btn.secondary { background: #475569; }
+
+    .barcode-label {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
     #barcodeCanvas {
       background: #fff;
       border-radius: 8px;
       display: block;
       margin: 0 auto;
+    }
+
+    .barcode-actions {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: #1d4ed8;
+      color: #fff;
+      border: 0;
+      cursor: pointer;
+      font-size: 13px;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.1s ease;
+    }
+
+    .btn.secondary {
+      background: #111827;
+      color: #e5e7eb;
+      border: 1px solid #374151;
+    }
+
+    .btn:active {
+      transform: translateY(1px) scale(0.99);
+      box-shadow: none;
+    }
+
+    .muted-foot {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 12px;
+      text-align: center;
+    }
+
+    @media (max-width: 480px) {
+      .card {
+        padding: 18px 14px 18px;
+      }
+      .title {
+        font-size: 22px;
+      }
+      .price {
+        font-size: 22px;
+      }
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
@@ -70,51 +359,98 @@
 <body>
   <div class="wrap">
     <div class="card">
-      <h1 class="title">{{ p.nama }}</h1>
-      <p class="price">Rp {{ "{:,}".format(p.harga).replace(",", ".") }}</p>
+      <div class="card-header">
+        <div class="title-wrap">
+          <h1 class="title">{{ p.nama_produk }}</h1>
+          <p class="price">Rp {{ "{:,}".format(p.harga).replace(",", ".") }}</p>
+          <div class="chip-price">
+            <span class="chip-dot"></span>
+            <span>Harga saat ini</span>
+          </div>
+        </div>
+
+        <!-- Tombol icon barcode (kanan atas, tanpa teks) -->
+        <button id="btnBarcodeIcon" class="barcode-icon-btn" type="button" aria-label="Tampilkan barcode">
+          <div class="barcode-icon-btn-inner">
+            <div class="barcode-line"></div>
+            <div class="barcode-line"></div>
+            <div class="barcode-line"></div>
+            <div class="barcode-line"></div>
+            <div class="barcode-line"></div>
+            <div class="barcode-line"></div>
+            <div class="barcode-line"></div>
+            <div class="barcode-line"></div>
+            <div class="barcode-line"></div>
+            <div class="barcode-line"></div>
+            <div class="barcode-line"></div>
+            <div class="barcode-line"></div>
+            <div class="barcode-line"></div>
+            <div class="barcode-line"></div>
+            <div class="barcode-line"></div>
+            <div class="barcode-line"></div>
+          </div>
+        </button>
+      </div>
 
       <div class="divider"></div>
 
       <!-- Toggle Keterangan -->
       <div class="section">
-        <button id="btnToggleDesc" class="toggle">Tampilkan Keterangan</button>
-        <div id="desc" class="hidden" style="margin-top:10px; line-height:1.6; text-align:center;">
-          {{ p.keterangan if p.keterangan else "Tidak ada keterangan." }}
-        </div>
-      </div>
-
-      <!-- Toggle Barcode -->
-      <div class="section">
-        <button id="btnToggleBarcode" class="toggle">Tampilkan Barcode</button>
-        <div id="barcodeWrap" class="hidden">
-          <div class="barcode-card">
-            <canvas id="barcodeCanvas" width="400" height="180" aria-label="Barcode {{ p.id }}"></canvas>
-            <div style="display:flex; gap:8px; justify-content:center; margin-top:10px;">
-              <button class="btn" id="btnDownload">Simpan PNG</button>
-              <a class="btn secondary" id="btnRefresh">Refresh</a>
-            </div>
+        <button id="btnToggleDesc" class="toggle-desc" type="button">
+          <div>
+            <div class="toggle-label-main">Keterangan Produk</div>
+            <div class="toggle-label-sub">Sentuh untuk menampilkan atau menyembunyikan keterangan</div>
+          </div>
+          <div class="chevron">&gt;</div>
+        </button>
+        <div id="descWrap" class="desc-body-wrap">
+          <div id="desc" class="desc-body">
+            {{ p.keterangan if p.keterangan else "Tidak ada keterangan." }}
           </div>
         </div>
       </div>
 
-      <p class="muted" style="margin-top:12px; text-align:center;">Halaman ini berdiri sendiri (tanpa tombol kembali).</p>
+      <!-- Kartu Barcode (default HIDDEN, tampil kalau icon diklik) -->
+      <div class="section">
+        <div id="barcodeCard" class="barcode-card">
+          <div class="barcode-label">Barcode &amp; ID Produk</div>
+          <canvas id="barcodeCanvas" width="400" height="150" aria-label="Barcode {{ p.id }}"></canvas>
+          <div class="barcode-actions">
+            <button class="btn" id="btnDownload" type="button">Simpan PNG</button>
+            <button class="btn secondary" id="btnRefresh" type="button">Refresh</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="muted-foot">
+        Halaman ini berdiri sendiri, cocok dibuka langsung dari hasil scan barcode.
+      </p>
     </div>
   </div>
 
   <script>
     const idVal = {{ p.id|tojson }};
-    const productName = {{ p.nama|tojson }};
+    const productName = {{ p.nama_produk|tojson }};
     let barcodeRendered = false;
+    let barcodeVisible = false; // DEFAULT: BARCODE TERSEMBUNYI
 
-    // Toggle keterangan aman
-    document.getElementById('btnToggleDesc').onclick = () => {
-      const desc = document.getElementById('desc');
-      const hidden = desc.classList.toggle('hidden');
-      document.getElementById('btnToggleDesc').textContent =
-        hidden ? 'Tampilkan Keterangan' : 'Sembunyikan Keterangan';
-    };
+    const barcodeCard = document.getElementById('barcodeCard');
+    const barcodeIconBtn = document.getElementById('btnBarcodeIcon');
 
-    // Render Barcode Tengah Sempurna
+    // ===============================
+    // Toggle Keterangan
+    // ===============================
+    const btnToggleDesc = document.getElementById('btnToggleDesc');
+    const descWrap = document.getElementById('descWrap');
+
+    btnToggleDesc.addEventListener('click', () => {
+      const isOpen = descWrap.classList.toggle('show');
+      btnToggleDesc.classList.toggle('open', isOpen);
+    });
+
+    // ===============================
+    // Render Barcode Tengah
+    // ===============================
     function renderBarcodeCanvas() {
       const canvas = document.getElementById('barcodeCanvas');
       const ctx = canvas.getContext('2d');
@@ -126,7 +462,6 @@
       const nameFont = '14px Arial';
       const idFont = '14px Arial';
 
-      // Render barcode sementara
       const tmpCanvas = document.createElement('canvas');
       const barcodeAreaWidth = canvas.width - 32;
       tmpCanvas.width = barcodeAreaWidth;
@@ -142,21 +477,21 @@
         background: '#fff'
       });
 
-      const totalHeight = 9 + 4 + barcodeHeight + 8 + 4; // nama + jarak + barcode + jarak + id
+      const totalHeight = 1 + 4 + barcodeHeight + 8 + 4;
       const startY = (canvas.height - totalHeight) / 2;
 
-      // Nama
+      // Nama produk di atas
       ctx.fillStyle = '#000';
       ctx.font = nameFont;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
       ctx.fillText(productName, centerX, startY);
 
-      // Barcode
+      // Barcode di tengah
       const xBarcode = (canvas.width - tmpCanvas.width) / 2;
       ctx.drawImage(tmpCanvas, xBarcode, startY + 8);
 
-      // ID
+      // ID di bawah
       ctx.fillStyle = '#000';
       ctx.font = idFont;
       ctx.textAlign = 'center';
@@ -166,19 +501,37 @@
       barcodeRendered = true;
     }
 
-    // Toggle barcode
-    document.getElementById('btnToggleBarcode').onclick = () => {
-      const wrap = document.getElementById('barcodeWrap');
-      const hidden = wrap.classList.toggle('hidden');
-      document.getElementById('btnToggleBarcode').textContent =
-        hidden ? 'Tampilkan Barcode' : 'Sembunyikan Barcode';
-      if (!hidden && !barcodeRendered) requestAnimationFrame(renderBarcodeCanvas);
+    // ===============================
+    // Toggle barcode via icon button
+    // ===============================
+    function setBarcodeVisible(show) {
+      barcodeVisible = show;
+      if (show) {
+        barcodeCard.classList.add('show');
+        barcodeIconBtn.classList.add('active');
+        if (!barcodeRendered) {
+          requestAnimationFrame(renderBarcodeCanvas);
+        }
+      } else {
+        barcodeCard.classList.remove('show');
+        barcodeIconBtn.classList.remove('active');
+      }
+    }
+
+    barcodeIconBtn.addEventListener('click', () => {
+      setBarcodeVisible(!barcodeVisible);
+    });
+
+    // DEFAULT: JANGAN TAMPILKAN BARCODE SAAT LOAD
+    setBarcodeVisible(false);
+
+    // ===============================
+    // Tombol Refresh & Download
+    // ===============================
+    document.getElementById('btnRefresh').onclick = () => {
+      renderBarcodeCanvas();
     };
 
-    // Refresh
-    document.getElementById('btnRefresh').onclick = renderBarcodeCanvas;
-
-    // Download
     document.getElementById('btnDownload').onclick = () => {
       const canvas = document.getElementById('barcodeCanvas');
       if (!barcodeRendered) renderBarcodeCanvas();

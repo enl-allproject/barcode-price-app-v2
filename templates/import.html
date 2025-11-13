@@ -162,16 +162,24 @@
       </form>
 
       <div class="note">
-        <div><strong>Struktur kolom wajib:</strong></div>
+        <div><strong>Struktur kolom wajib (header tepat sama):</strong></div>
         <div>
           <code>id</code>,
-          <code>nama</code>,
+          <code>nama_produk</code>,
+          <code>hpp</code>,
+          <code>profit</code>,
+          <code>harga_25</code>,
           <code>harga</code>,
-          <code>foto</code>,
+          <code>sumber</code>,
           <code>keterangan</code>
         </div>
         <div style="margin-top:6px;">
-          Pastikan <code>id</code> unik per produk. Jika ada kolom lain, akan diabaikan.
+          Kolom <code>id</code> harus unik per produk.
+          Kolom <code>hpp</code>, <code>profit</code>, <code>harga_25</code>, dan <code>harga</code>
+          diisi angka saja (tanpa &quot;Rp&quot; atau titik pemisah ribuan).
+        </div>
+        <div style="margin-top:6px;">
+          Jika ada kolom tambahan selain di atas, akan diabaikan saat disimpan.
         </div>
       </div>
     </div>
