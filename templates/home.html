@@ -2,138 +2,346 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <title>Scan Barcode - Barcode Price App</title>
+  <title>Scanner Harga Produk</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
-    :root { --bg:#0b1220; --card:#111827; --line:#1f2937; --muted:#94a3b8; --btn:#2563eb; --btn2:#475569; }
     * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: #e5e7eb; font-family: system-ui, Arial, sans-serif; min-height: 100vh; }
-    .topbar {
-      position: fixed; top:0; left:0; right:0; height:56px; display:flex; align-items:center; justify-content:space-between;
-      padding: 0 14px; background:#0b1220cc; border-bottom:1px solid var(--line); backdrop-filter: blur(6px); z-index:50;
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1d283a, #020617);
+      color: #e5e7eb;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
-    .brand { font-weight:700; font-size:16px; }
-    .btn { display:inline-block; padding:8px 12px; border-radius:8px; border:0; text-decoration:none; font-weight:600; cursor:pointer; }
-    .btn.primary { background: var(--btn); color:#fff; }
-    .btn.secondary { background: var(--btn2); color:#fff; }
-    .wrap { padding-top:72px; display:flex; justify-content:center; align-items:center; min-height:100vh; }
-    .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; text-align:center; width:min(680px, 94vw); box-shadow:0 10px 30px rgba(0,0,0,.45); }
-    h2 { margin:6px 0 12px; font-size:20px; }
-    #reader { width: 100%; min-height: 320px; margin: 12px auto; }
-    #status { font-size:14px; color:var(--muted); margin-top:6px; }
-    .controls { display:flex; justify-content:center; flex-wrap:wrap; gap:10px; margin-top:10px; }
+    .wrap {
+      width: 100%;
+      max-width: 480px;
+      padding: 20px;
+    }
+    .card {
+      background: #020617;
+      border-radius: 16px;
+      border: 1px solid #1f2937;
+      padding: 18px 16px 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    }
+    .title {
+      text-align: center;
+      font-size: 22px;
+      margin: 0 0 4px;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 13px;
+      color: #9ca3af;
+      margin: 0 0 14px;
+    }
+    .scanner-box {
+      border-radius: 14px;
+      overflow: hidden;
+      background: #020617;
+      position: relative;
+      border: 1px solid #1f2937;
+      min-height: 260px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #reader {
+      width: 100%;
+      max-width: 100%;
+    }
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .btn {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.12s ease;
+    }
+    .btn-primary {
+      background: linear-gradient(to right, #22c55e, #16a34a);
+      color: white;
+      box-shadow: 0 10px 20px rgba(34,197,94,0.35);
+    }
+    .btn-secondary {
+      background: #111827;
+      color: #e5e7eb;
+      border: 1px solid #374151;
+    }
+    .btn:active {
+      transform: translateY(1px) scale(0.99);
+      box-shadow: none;
+    }
+    .hint {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #9ca3af;
+      text-align: center;
+    }
+    .hint span {
+      color: #22c55e;
+      font-weight: 500;
+    }
 
-    .modal-backdrop { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.6); z-index:100; }
-    .modal { width:min(560px, 94vw); background:#0f172a; border:1px solid #334155; border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,.6); overflow:hidden; }
-    .modal-header { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid #334155; background:#0b1220; }
-    .modal-title { margin:0; font-size:16px; color:#e2e8f0; }
-    .modal-close { border:0; background:transparent; color:#e2e8f0; font-size:18px; width:36px; height:36px; border-radius:8px; cursor:pointer; }
-    .modal-close:hover { background:#1f2937; }
-    .modal-body { padding:0; }
-    .modal-body iframe { display:block; border:0; width:100%; height:520px; background:#0b1220; }
+    /* Modal produk */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.92);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 50;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal-card {
+      position: relative;
+      background: #020617;
+      border-radius: 16px;
+      border: 1px solid #1f2937;
+      width: 100%;
+      max-width: 480px;
+      height: min(520px, 90vh);
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-header {
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #111827;
+    }
+    .modal-header span {
+      font-size: 14px;
+      color: #9ca3af;
+    }
+    .modal-close {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      border: 1px solid #4b5563;
+      background: radial-gradient(circle at top, #1f2937, #020617);
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+    }
+    .modal-body {
+      flex: 1;
+      padding: 0;
+      background: #020617;
+    }
+    .modal-body iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    @media (max-width: 420px) {
+      .card { padding: 14px 12px 16px; }
+      .title { font-size: 19px; }
+      .subtitle { font-size: 12px; }
+      .scanner-box { min-height: 220px; }
+    }
   </style>
 
+  <!-- CDN Html5Qrcode (kalau kamu pakai pustaka lain, bagian logika scan bisa disesuaikan) -->
   <script src="https://unpkg.com/html5-qrcode" defer></script>
 </head>
 <body>
-  <div class="topbar">
-    <div class="brand">Barcode Price App</div>
-    <div class="actions">
-      {% if current_user.is_authenticated %}
-        <a class="btn secondary" href="{{ url_for('database') }}">Database</a>
-      {% else %}
-        <a class="btn secondary" href="{{ url_for('login', next=url_for('database')) }}">Database</a>
-      {% endif %}
-    </div>
-  </div>
-
   <div class="wrap">
     <div class="card">
-      <h2>Scan Barcode</h2>
-      <div class="controls">
-        <button class="btn primary" id="btnStart">Mulai Scan</button>
-        <button class="btn secondary" id="btnStop" disabled>Hentikan Kamera</button>
+      <h1 class="title">Scan Barcode Harga</h1>
+      <p class="subtitle">Arahkan kamera ke barcode produk untuk melihat harga & detail.</p>
+
+      <div class="scanner-box">
+        <div id="reader"></div>
       </div>
-      <div id="reader"></div>
-      <div id="status">Kamera belum aktif.</div>
-      <p style="color:var(--muted); font-size:13px; margin-top:8px;">Arahkan kamera ke barcode. Saat terdeteksi, produk akan muncul dalam pop-up.</p>
+
+      <div class="btn-row">
+        <button id="btnStart" class="btn btn-primary">
+          🚀 Mulai Scan
+        </button>
+        <button id="btnDatabase" class="btn btn-secondary" onclick="window.location.href='{{ url_for('login') }}'">
+          📂 Database
+        </button>
+      </div>
+
+      <p class="hint">
+        Setelah barcode terbaca, akan muncul <span>popup detail produk</span> + bunyi <span>beep</span> sebagai penanda.
+      </p>
     </div>
   </div>
 
-  <!-- Modal Produk -->
-  <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true">
+  <!-- Modal detail produk -->
+  <div id="productModal" class="modal-backdrop">
+    <div class="modal-card">
       <div class="modal-header">
-        <h3 class="modal-title">Detail Produk</h3>
-        <button id="btnClose" class="modal-close" title="Tutup">✕</button>
+        <span>Detail Produk</span>
+        <button class="modal-close" id="btnCloseModal">&times;</button>
       </div>
       <div class="modal-body">
-        <iframe id="productFrame" src="about:blank"></iframe>
+        <iframe id="productFrame" src=""></iframe>
       </div>
     </div>
   </div>
 
   <script>
-    const elReader = document.getElementById('reader');
-    const elStatus = document.getElementById('status');
-    const btnStart = document.getElementById('btnStart');
-    const btnStop  = document.getElementById('btnStop');
-    const modalBackdrop = document.getElementById('modalBackdrop');
-    const productFrame  = document.getElementById('productFrame');
-    const btnClose      = document.getElementById('btnClose');
-
-    let html5Qr = null;
-
-    function openModalFor(idValue) {
-      productFrame.src = `/p/${encodeURIComponent(idValue)}`;
-      modalBackdrop.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-    }
-    function closeModal() {
-      modalBackdrop.style.display = 'none';
-      productFrame.src = 'about:blank';
-      document.body.style.overflow = '';
-    }
-    btnClose.addEventListener('click', closeModal);
-    modalBackdrop.addEventListener('click', (e) => { if (e.target === modalBackdrop) closeModal(); });
-
-    async function startScan() {
-      if (html5Qr) return;
+    // =========================
+    //  SUARA BEEP SETIAP SCAN
+    // =========================
+    let audioCtx = null;
+    function playBeep() {
       try {
-        html5Qr = new Html5Qrcode("reader");
-        const devices = await Html5Qrcode.getCameras();
-        const backCam = devices.find(d => /back|rear|environment/i.test(d.label)) || devices[0];
-        await html5Qr.start(
-          { deviceId: { exact: backCam.id } },
-          { fps: 12, qrbox: { width: 360, height: 180 } },
-          (decoded) => {
-            if (!decoded) return;
-            stopScan(true);
-            openModalFor(decoded);
-          },
-          (err) => {}
-        );
-        elStatus.textContent = "Kamera aktif. Arahkan ke barcode…";
-        btnStart.disabled = true; btnStop.disabled = false;
+        if (!audioCtx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AC();
+        }
+        const duration = 0.15; // detik
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        oscillator.type = 'square';
+        oscillator.frequency.value = 1200; // frekuensi beep (Hz)
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+        gainNode.gain.setValueAtTime(0.12, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        oscillator.start(now);
+        oscillator.stop(now + duration);
       } catch (e) {
-        elStatus.textContent = "Tidak dapat mengaktifkan kamera: " + e;
-        stopScan();
+        console.warn('Gagal memutar beep:', e);
       }
     }
 
-    async function stopScan(silent=false) {
-      if (html5Qr) {
-        try { await html5Qr.stop(); } catch {}
-        try { await html5Qr.clear(); } catch {}
-        html5Qr = null;
-      }
-      btnStart.disabled = false; btnStop.disabled = true;
-      if (!silent) elStatus.textContent = "Kamera dimatikan.";
+    // =========================
+    //  LOGIKA MODAL PRODUK
+    // =========================
+    const modal = document.getElementById('productModal');
+    const productFrame = document.getElementById('productFrame');
+    const btnCloseModal = document.getElementById('btnCloseModal');
+
+    function openProductModal(productId) {
+      // Set URL produk: /p/<id>
+      productFrame.src = `/p/${encodeURIComponent(productId)}`;
+      modal.classList.add('show');
     }
 
-    btnStart.addEventListener('click', startScan);
-    btnStop.addEventListener('click', () => stopScan());
+    function closeProductModal() {
+      modal.classList.remove('show');
+      productFrame.src = '';
+    }
+
+    btnCloseModal.addEventListener('click', closeProductModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeProductModal();
+      }
+    });
+
+    // =========================
+    //  LOGIKA SCANNER (Html5Qrcode)
+    // =========================
+    let html5QrCode = null;
+    let isScanning = false;
+    let lastScanned = null;
+    let scanCooldown = false;
+
+    function startScanner() {
+      if (isScanning) return;
+      const readerElem = document.getElementById('reader');
+
+      if (!html5QrCode) {
+        html5QrCode = new Html5Qrcode("reader");
+      }
+
+      const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0
+      };
+
+      html5QrCode.start(
+        { facingMode: "environment" },
+        config,
+        (decodedText, decodedResult) => {
+          if (scanCooldown) return;
+
+          const value = (decodedText || "").trim();
+          if (!value) return;
+
+          // Hindari trigger berulang terlalu cepat untuk barcode sama
+          if (value === lastScanned) return;
+          lastScanned = value;
+          scanCooldown = true;
+
+          // 👉 PLAY BEEP DI SINI
+          playBeep();
+
+          // 👉 BUKA POPUP PRODUK
+          openProductModal(value);
+
+          // Beri jeda 1 detik sebelum boleh scan lagi
+          setTimeout(() => {
+            scanCooldown = false;
+          }, 1000);
+        },
+        (errorMessage) => {
+          // Bisa diabaikan atau log kalau mau:
+          // console.log("Scan error:", errorMessage);
+        }
+      ).then(() => {
+        isScanning = true;
+      }).catch(err => {
+        console.error("Gagal memulai scanner:", err);
+      });
+    }
+
+    function stopScanner() {
+      if (html5QrCode && isScanning) {
+        html5QrCode.stop().then(() => {
+          html5QrCode.clear();
+          isScanning = false;
+        }).catch(err => {
+          console.error("Gagal menghentikan scanner:", err);
+        });
+      }
+    }
+
+    document.getElementById('btnStart').addEventListener('click', () => {
+      // Gesture user ini membantu izin audio + kamera (mobile)
+      startScanner();
+    });
+
+    // Kalau modal ditutup, scanner tetap jalan (biar bisa scan lagi).
+    // Kalau kamu ingin scanner berhenti ketika popup muncul, bisa panggil stopScanner() di openProductModal.
   </script>
 </body>
 </html>
