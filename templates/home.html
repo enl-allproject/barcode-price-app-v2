@@ -168,7 +168,7 @@
     }
   </style>
 
-  <!-- CDN Html5Qrcode (kalau kamu pakai pustaka lain, bagian logika scan bisa disesuaikan) -->
+  <!-- CDN Html5Qrcode -->
   <script src="https://unpkg.com/html5-qrcode" defer></script>
 </head>
 <body>
@@ -208,6 +208,130 @@
       </div>
     </div>
   </div>
-</script>
+
+  <script>
+    // =========================
+    //  SUARA BEEP SETIAP SCAN
+    // =========================
+    let audioCtx = null;
+    function playBeep() {
+      try {
+        if (!audioCtx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AC();
+        }
+        const duration = 0.15; // detik
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        oscillator.type = 'square';
+        oscillator.frequency.value = 1200; // frekuensi beep
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+        gainNode.gain.setValueAtTime(0.12, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        oscillator.start(now);
+        oscillator.stop(now + duration);
+      } catch (e) {
+        console.warn('Gagal memutar beep:', e);
+      }
+    }
+
+    // =========================
+    //  LOGIKA MODAL PRODUK
+    // =========================
+    const modal = document.getElementById('productModal');
+    const productFrame = document.getElementById('productFrame');
+    const btnCloseModal = document.getElementById('btnCloseModal');
+
+    function openProductModal(productId) {
+      productFrame.src = `/p/${encodeURIComponent(productId)}`;
+      modal.classList.add('show');
+    }
+
+    function closeProductModal() {
+      modal.classList.remove('show');
+      productFrame.src = '';
+    }
+
+    btnCloseModal.addEventListener('click', closeProductModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeProductModal();
+      }
+    });
+
+    // =========================
+    //  LOGIKA SCANNER (Html5Qrcode)
+    // =========================
+    let html5QrCode = null;
+    let isScanning = false;
+    let scanCooldown = false; // pakai cooldown saja, barcode sama boleh di-scan lagi
+
+    function startScanner() {
+      if (isScanning) return;
+
+      if (!html5QrCode) {
+        html5QrCode = new Html5QrCode("reader");
+      }
+
+      const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0
+      };
+
+      html5QrCode.start(
+        { facingMode: "environment" },
+        config,
+        (decodedText, decodedResult) => {
+          if (scanCooldown) return;
+
+          const value = (decodedText || "").trim();
+          if (!value) return;
+
+          // cooldown 1 detik supaya tidak spam
+          scanCooldown = true;
+
+          // beep
+          playBeep();
+
+          // buka popup produk
+          openProductModal(value);
+
+          setTimeout(() => {
+            scanCooldown = false;
+          }, 1000);
+        },
+        (errorMessage) => {
+          // error scanning bisa diabaikan
+          // console.log("Scan error:", errorMessage);
+        }
+      ).then(() => {
+        isScanning = true;
+      }).catch(err => {
+        console.error("Gagal memulai scanner:", err);
+      });
+    }
+
+    function stopScanner() {
+      if (html5QrCode && isScanning) {
+        html5QrCode.stop().then(() => {
+          html5QrCode.clear();
+          isScanning = false;
+        }).catch(err => {
+          console.error("Gagal menghentikan scanner:", err);
+        });
+      }
+    }
+
+    document.getElementById('btnStart').addEventListener('click', () => {
+      startScanner();
+    });
+  </script>
 </body>
 </html>
