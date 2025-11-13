@@ -169,7 +169,7 @@
   </style>
 
   <!-- CDN Html5Qrcode -->
-  <script src="https://unpkg.com/html5-qrcode" defer></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body>
   <div class="wrap">
@@ -270,13 +270,13 @@
     // =========================
     let html5QrCode = null;
     let isScanning = false;
-    let scanCooldown = false; // pakai cooldown saja, barcode sama boleh di-scan lagi
+    let scanCooldown = false; // pakai cooldown, barcode sama boleh discan lagi
 
     function startScanner() {
       if (isScanning) return;
 
       if (!html5QrCode) {
-        html5QrCode = new Html5QrCode("reader");
+        html5QrCode = new Html5Qrcode("reader");  // ← ini nama class yang benar
       }
 
       const config = {
@@ -294,7 +294,7 @@
           const value = (decodedText || "").trim();
           if (!value) return;
 
-          // cooldown 1 detik supaya tidak spam
+          // cooldown 1 detik
           scanCooldown = true;
 
           // beep
