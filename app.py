@@ -1,4 +1,4 @@
-# app.py — FINAL STABLE VERSION FOR PYTHONANYWHERE
+# app.py — FINAL STABLE VERSION (PERBAIKI IMPORT)
 
 import os
 from io import BytesIO
@@ -16,9 +16,8 @@ from dotenv import load_dotenv, find_dotenv
 from werkzeug.security import check_password_hash
 
 # ======================================================
-# ENV LOADER (PythonAnywhere + local development)
+# ENV LOADER
 # ======================================================
-# find_dotenv() memastikan .env ditemukan walau directory berubah
 load_dotenv(find_dotenv(), override=True)
 
 APP_USER       = os.getenv("APP_USERNAME", "admin")
@@ -37,19 +36,21 @@ login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
 # ======================================================
-# FILE STORAGE (Excel)
+# FILE STORAGE (Excel + excel_store)
 # ======================================================
 try:
-    from excel_store import load_products
+    # Coba pakai excel_store penuh (load + save) kalau ada
+    from excel_store import load_products, save_products
 except Exception:
     load_products = None
+    save_products = None
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FALLBACK_PATH = os.path.join(BASE_DIR, "products.xlsx")
 
 
 def _load_products_df() -> pd.DataFrame:
-    """Load product list from excel_store or products.xlsx"""
+    """Load product list dari excel_store (jika ada) atau fallback Excel."""
     if load_products:
         df = load_products()
     elif os.path.exists(FALLBACK_PATH):
@@ -66,7 +67,14 @@ def _load_products_df() -> pd.DataFrame:
 
 
 def _save_products_df(df: pd.DataFrame):
-    df.to_excel(FALLBACK_PATH, index=False)
+    """Simpan DF via excel_store.save_products jika ada; kalau tidak, ke fallback Excel."""
+    if save_products:
+        # Pastikan id string
+        if "id" in df.columns:
+            df["id"] = df["id"].astype(str)
+        save_products(df)
+    else:
+        df.to_excel(FALLBACK_PATH, index=False)
 
 # ======================================================
 # LOGIN MODEL
@@ -98,10 +106,8 @@ def login():
         ok = False
 
         if u == APP_USER:
-            # Priority 1 — password hash
             if APP_PASS_HASH:
                 ok = check_password_hash(APP_PASS_HASH, p)
-            # Priority 2 — plaintext password
             elif APP_PASS is not None:
                 ok = (p == APP_PASS)
 
