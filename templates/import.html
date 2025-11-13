@@ -1,0 +1,29 @@
+<!-- templates/import.html -->
+{% extends "base.html" %}
+{% block title %}Import Excel - Barcode Price App{% endblock %}
+{% block content %}
+<div class="card" style="max-width:560px; margin:0 auto;">
+  <h2 style="margin-top:0;">Import Excel</h2>
+  <p>Unggah file Excel (<code>.xlsx</code>) dengan kolom minimal <code>id, nama, harga</code>. Kolom opsional: <code>foto, keterangan</code>.</p>
+  <form method="post" enctype="multipart/form-data">
+    <div style="margin-bottom:12px;">
+      <label for="file">File (.xlsx)</label><br>
+      <input id="file" name="file" type="file" accept=".xlsx" required>
+    </div>
+    <div style="margin-bottom:12px;">
+      <label>Mode Import</label>
+      <div style="display:flex; gap:16px; margin-top:6px;">
+        <label><input type="radio" name="mode" value="merge" checked> Merge (Upsert by <code>id</code>)</label>
+        <label><input type="radio" name="mode" value="replace"> Replace (Ganti semua data)</label>
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button class="btn" type="submit">Import</button>
+      <a class="btn secondary" href="{{ url_for('dashboard') }}">Kembali</a>
+    </div>
+    <div style="margin-top:12px; color:#6b7280; font-size:14px;">
+      Tips: Kamu bisa klik <strong>Export Excel</strong> di dashboard untuk melihat format kolom yang tepat.
+    </div>
+  </form>
+</div>
+{% endblock %}

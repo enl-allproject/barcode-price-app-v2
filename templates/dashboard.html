@@ -1,0 +1,44 @@
+<!-- templates/dashboard.html -->
+{% extends "base.html" %}
+{% block title %}Dashboard - Barcode Price App{% endblock %}
+{% block content %}
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+    <h2 style="margin:0;">Daftar Produk (Sumber: Excel)</h2>
+    <div style="display:flex; gap:8px;">
+      <a class="btn" href="{{ url_for('import_excel') }}">Import Excel</a>
+      <a class="btn secondary" href="{{ url_for('export_excel') }}">Export Excel</a>
+      <a class="btn" href="{{ url_for('scan_page') }}">Mode Scan</a>
+    </div>
+  </div>
+  <div class="card">
+    <div style="overflow:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Kode/ID (Barcode)</th>
+            <th>Nama</th>
+            <th>Harga</th>
+            <th>Foto</th>
+            <th>Keterangan</th>
+            <th>Detail</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in products %}
+          <tr>
+            <td>{{ p.id }}</td>
+            <td>{{ p.nama }}</td>
+            <td>Rp {{ "{:,}".format(p.harga).replace(",", ".") }}</td>
+            <td>{{ p.foto }}</td>
+            <td>{{ p.keterangan }}</td>
+            <td><a href="{{ url_for('product_page', id_value=p.id) }}">Buka</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p style="color:#6b7280; font-size:14px; margin-top:10px;">
+      Kolom opsional <code>barcode</code> kini ikut diexport (biarkan kosong; barcode dibuat di website).
+    </p>
+  </div>
+{% endblock %}

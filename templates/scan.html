@@ -1,0 +1,37 @@
+<!-- templates/scan.html -->
+{% extends "base.html" %}
+{% block title %}Mode Scan - Barcode Price App{% endblock %}
+{% block head %}
+  <!-- html5-qrcode CDN -->
+  <script src="https://unpkg.com/html5-qrcode" defer></script>
+{% endblock %}
+{% block content %}
+  <div class="card" style="max-width:720px; margin:0 auto;">
+    <h2 style="margin-top:0;">Mode Scan Barcode</h2>
+    <p>Izinkan kamera. Arahkan ke barcode (ID produk). Jika terbaca, halaman akan membuka detail produk.</p>
+    <div id="reader" style="width:100%; max-width:640px; margin:auto;"></div>
+    <div id="status" style="margin-top:12px; color:#6b7280; font-size:14px;">Menunggu kamera…</div>
+  </div>
+
+  <script>
+    window.addEventListener('load', () => {
+      const elReader = document.getElementById('reader');
+      const elStatus = document.getElementById('status');
+
+      function onScanSuccess(decodedText, decodedResult) {
+        if (!decodedText) return;
+        // anggap decodedText = id produk
+        window.location.href = `/p/${encodeURIComponent(decodedText)}`;
+      }
+
+      function onScanFailure(error) {
+        // diamkan: dipanggil sering; tidak perlu spam log
+      }
+
+      const config = { fps: 10, qrbox: { width: 300, height: 150 }, rememberLastUsedCamera: true };
+      const html5QrcodeScanner = new Html5QrcodeScanner("reader", config, false);
+      html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+      elStatus.textContent = "Kamera aktif. Arahkan ke barcode…";
+    });
+  </script>
+{% endblock %}

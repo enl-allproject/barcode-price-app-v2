@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <title>{{ p.nama }} - Detail Produk</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: system-ui, Arial, sans-serif;
+      margin: 0;
+      background: #0b1220;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .wrap { width: 100%; max-width: 520px; padding: 20px; }
+    .card {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
+    }
+    .title { margin: 0 0 6px 0; font-size: 22px; text-align: center; }
+    .price { margin: 0; font-weight: 700; font-size: 20px; color: #86efac; text-align: center; }
+    .muted { color: #94a3b8; font-size: 14px; }
+    .divider { height: 1px; background: #1f2937; margin: 14px 0; }
+    .toggle {
+      width: 100%;
+      text-align: center;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 10px;
+      background: #0f172a;
+      color: #e2e8f0;
+      cursor: pointer;
+    }
+    .hidden { display: none; }
+    .section { margin-top: 12px; }
+    .barcode-card {
+      margin-top: 10px;
+      background: #0f172a;
+      border: 1px dashed #334155;
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+    .btn {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: #2563eb;
+      color: #fff;
+      text-decoration: none;
+      border: 0;
+      cursor: pointer;
+    }
+    .btn.secondary { background: #475569; }
+    #barcodeCanvas {
+      background: #fff;
+      border-radius: 8px;
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 class="title">{{ p.nama }}</h1>
+      <p class="price">Rp {{ "{:,}".format(p.harga).replace(",", ".") }}</p>
+
+      <div class="divider"></div>
+
+      <!-- Toggle Keterangan -->
+      <div class="section">
+        <button id="btnToggleDesc" class="toggle">Tampilkan Keterangan</button>
+        <div id="desc" class="hidden" style="margin-top:10px; line-height:1.6; text-align:center;">
+          {{ p.keterangan if p.keterangan else "Tidak ada keterangan." }}
+        </div>
+      </div>
+
+      <!-- Toggle Barcode -->
+      <div class="section">
+        <button id="btnToggleBarcode" class="toggle">Tampilkan Barcode</button>
+        <div id="barcodeWrap" class="hidden">
+          <div class="barcode-card">
+            <canvas id="barcodeCanvas" width="400" height="180" aria-label="Barcode {{ p.id }}"></canvas>
+            <div style="display:flex; gap:8px; justify-content:center; margin-top:10px;">
+              <button class="btn" id="btnDownload">Simpan PNG</button>
+              <a class="btn secondary" id="btnRefresh">Refresh</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="muted" style="margin-top:12px; text-align:center;">Halaman ini berdiri sendiri (tanpa tombol kembali).</p>
+    </div>
+  </div>
+
+  <script>
+    const idVal = {{ p.id|tojson }};
+    const productName = {{ p.nama|tojson }};
+    let barcodeRendered = false;
+
+    // Toggle keterangan aman
+    document.getElementById('btnToggleDesc').onclick = () => {
+      const desc = document.getElementById('desc');
+      const hidden = desc.classList.toggle('hidden');
+      document.getElementById('btnToggleDesc').textContent =
+        hidden ? 'Tampilkan Keterangan' : 'Sembunyikan Keterangan';
+    };
+
+    // Render Barcode Tengah Sempurna
+    function renderBarcodeCanvas() {
+      const canvas = document.getElementById('barcodeCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const centerX = canvas.width / 2;
+      const barcodeHeight = 95;
+      const nameFont = '14px Arial';
+      const idFont = '14px Arial';
+
+      // Render barcode sementara
+      const tmpCanvas = document.createElement('canvas');
+      const barcodeAreaWidth = canvas.width - 32;
+      tmpCanvas.width = barcodeAreaWidth;
+      tmpCanvas.height = barcodeHeight;
+
+      JsBarcode(tmpCanvas, idVal, {
+        format: 'CODE128',
+        width: 3,
+        height: barcodeHeight,
+        displayValue: false,
+        margin: 0,
+        lineColor: '#000',
+        background: '#fff'
+      });
+
+      const totalHeight = 9 + 4 + barcodeHeight + 8 + 4; // nama + jarak + barcode + jarak + id
+      const startY = (canvas.height - totalHeight) / 2;
+
+      // Nama
+      ctx.fillStyle = '#000';
+      ctx.font = nameFont;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(productName, centerX, startY);
+
+      // Barcode
+      const xBarcode = (canvas.width - tmpCanvas.width) / 2;
+      ctx.drawImage(tmpCanvas, xBarcode, startY + 8);
+
+      // ID
+      ctx.fillStyle = '#000';
+      ctx.font = idFont;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(idVal, centerX, startY + 8 + barcodeHeight + 8);
+
+      barcodeRendered = true;
+    }
+
+    // Toggle barcode
+    document.getElementById('btnToggleBarcode').onclick = () => {
+      const wrap = document.getElementById('barcodeWrap');
+      const hidden = wrap.classList.toggle('hidden');
+      document.getElementById('btnToggleBarcode').textContent =
+        hidden ? 'Tampilkan Barcode' : 'Sembunyikan Barcode';
+      if (!hidden && !barcodeRendered) requestAnimationFrame(renderBarcodeCanvas);
+    };
+
+    // Refresh
+    document.getElementById('btnRefresh').onclick = renderBarcodeCanvas;
+
+    // Download
+    document.getElementById('btnDownload').onclick = () => {
+      const canvas = document.getElementById('barcodeCanvas');
+      if (!barcodeRendered) renderBarcodeCanvas();
+      canvas.toBlob(blob => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `barcode_{{ p.id }}.png`;
+        a.click();
+      }, 'image/png');
+    };
+  </script>
+</body>
+</html>
