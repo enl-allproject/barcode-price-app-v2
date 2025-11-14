@@ -149,7 +149,6 @@
       border: 1px solid #1f2937;
       box-shadow: 0 24px 50px rgba(0,0,0,0.9);
       overflow: hidden;
-      /* proporsi utama: ambil ~75% tinggi layar */
       max-height: 75vh;
       min-height: 58vh;
       display: flex;
@@ -243,7 +242,7 @@
 
       <p class="hint">
         Setiap barcode terbaca, panel <span>detail produk</span> akan muncul dari bawah.
-        Kamera tetap aktif sebagai <span>preview kecil</span>.
+        Kamera tetap aktif sebagai <span>preview atas</span>.
       </p>
     </div>
   </div>
@@ -336,7 +335,8 @@
             cameraId,
             {
               fps: 10,
-              qrbox: { width: 260, height: 160 }
+              // qrbox disesuaikan agar nyaman di preview atas dan saat kamera besar
+              qrbox: { width: 220, height: 120 }
             },
             onScanSuccess,
             errorMessage => {
@@ -375,7 +375,7 @@
       productPanelBackdrop.classList.remove('show');
       document.body.classList.remove('product-open');
       productFrame.src = "";
-      // kamera tetap hidup sebagai preview di atas
+      // kamera tetap hidup dan terus scan di preview atas
     });
 
     // Klik area gelap di luar panel → tutup panel saja (kamera tetap)
