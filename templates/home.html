@@ -84,37 +84,39 @@
       font-weight: 500;
     }
 
-    /* MODAL: kamera + detail produk */
+    /* POPUP: kamera kecil + detail produk */
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(15,23,42,0.95);
+      background: rgba(15,23,42,0.9);
       display: none;
-      align-items: center;
+      align-items: flex-end;
       justify-content: center;
-      padding: 14px;
+      padding: 10px;
       z-index: 50;
     }
     .modal-backdrop.show {
       display: flex;
     }
     .modal-card {
-      position: relative;
       background: #020617;
-      border-radius: 18px;
+      border-radius: 18px 18px 14px 14px;
       border: 1px solid #1f2937;
       width: 100%;
       max-width: 520px;
-      height: min(640px, 100vh - 32px);
-      box-shadow: 0 24px 50px rgba(0,0,0,0.85);
+      max-height: 80vh;
+      min-height: 60vh;
       display: flex;
       flex-direction: column;
+      box-shadow: 0 24px 50px rgba(0,0,0,0.9);
       overflow: hidden;
-      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      transform: translateY(14px);
+      opacity: 0;
+      transition: transform 0.18s ease-out, opacity 0.18s ease-out;
     }
-    .modal-card.has-product {
-      transform: translateY(-3px);
-      box-shadow: 0 20px 45px rgba(0,0,0,0.9);
+    .modal-backdrop.show .modal-card {
+      transform: translateY(0);
+      opacity: 1;
     }
     .modal-header {
       padding: 10px 12px;
@@ -154,9 +156,9 @@
       background: #020617;
     }
 
+    /* Kamera kecil di dalam popup */
     .modal-camera {
-      padding: 10px 10px 6px;
-      transition: padding 0.18s ease;
+      padding: 8px 10px 4px;
     }
     .camera-label {
       font-size: 12px;
@@ -169,28 +171,15 @@
       overflow: hidden;
       border: 1px solid #1f2937;
       background: #020617;
-      height: 260px;
-      max-height: 260px;
+      height: 120px;           /* area kecil untuk scan */
+      max-height: 120px;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition:
-        height 0.22s ease,
-        max-height 0.22s ease,
-        box-shadow 0.22s ease,
-        opacity 0.22s ease;
     }
     #reader {
       width: 100%;
       max-width: 100%;
-    }
-
-    /* Setelah produk pertama discan → kamera mengecil jadi preview atas */
-    .modal-card.has-product .reader-box {
-      height: 120px;
-      max-height: 120px;
-      box-shadow: 0 10px 26px rgba(0,0,0,0.7);
-      opacity: 0.85;
     }
 
     .modal-divider {
@@ -198,16 +187,10 @@
       background: linear-gradient(to right, transparent, #1f2937, transparent);
       margin: 4px 8px 4px;
     }
+
     .modal-product {
       flex: 1;
-      padding: 4px 8px 10px;
-      opacity: 0;
-      transform: translateY(10px);
-      transition: opacity 0.2s ease, transform 0.2s ease;
-    }
-    .modal-card.has-product .modal-product {
-      opacity: 1;
-      transform: translateY(0);
+      padding: 6px 8px 10px;
     }
     .modal-product iframe {
       width: 100%;
@@ -227,10 +210,9 @@
       .card { padding: 16px 14px 18px; }
       .title { font-size: 20px; }
       .subtitle { font-size: 12px; }
-      .modal-card { height: calc(100vh - 24px); }
-      .reader-box { height: 230px; }
-      .modal-card.has-product .reader-box {
-        height: 120px;
+      .modal-card {
+        max-height: 85vh;
+        min-height: 65vh;
       }
     }
   </style>
@@ -243,7 +225,7 @@
     <div class="card">
       <h1 class="title">Scan Barcode Harga</h1>
       <p class="subtitle">
-        Tekan tombol di bawah untuk membuka kamera, lalu arahkan ke barcode produk.
+        Tekan tombol di bawah untuk membuka kamera, lalu arahkan barcode ke area scan kecil di popup.
       </p>
 
       <div class="btn-row">
@@ -256,22 +238,22 @@
       </div>
 
       <p class="hint">
-        Setelah barcode terbaca, kamera akan menyusut menjadi <span>preview di atas</span>,
-        dan panel <span>detail produk</span> muncul di bawah.
+        Kamera akan muncul di popup sebagai <span>preview kecil untuk scan</span>,
+        dan detail produk tampil besar di bawahnya.
       </p>
     </div>
   </div>
 
-  <!-- MODAL: kamera + detail produk -->
+  <!-- POPUP: kamera kecil + detail produk -->
   <div id="scannerModal" class="modal-backdrop">
-    <div id="scannerCard" class="modal-card">
+    <div class="modal-card" id="scannerCard">
       <div class="modal-header">
-        <span>Scan Barcode &amp; Detail Produk</span>
-        <button class="modal-close" id="btnCloseModal" type="button">&times;</button>
+        <span>Scan &amp; Detail Produk</span>
+        <button id="btnCloseModal" class="modal-close" type="button">&times;</button>
       </div>
       <div class="modal-body">
         <div class="modal-camera">
-          <div class="camera-label">Kamera aktif &ndash; arahkan barcode ke area tengah kotak scan.</div>
+          <div class="camera-label">Kamera aktif &ndash; arahkan barcode ke tengah area ini.</div>
           <div class="reader-box">
             <div id="reader"></div>
           </div>
@@ -280,7 +262,7 @@
         <div class="modal-product">
           <iframe id="productFrame" src="" title="Detail Produk"></iframe>
           <div id="placeholder" class="modal-placeholder">
-            Belum ada barcode yang discan. Arahkan kamera ke barcode untuk melihat detail produk.
+            Belum ada barcode yang discan. Arahkan barcode ke area kamera kecil di atas untuk melihat detail produk.
           </div>
         </div>
       </div>
@@ -296,7 +278,6 @@
     const btnOpenScanner = document.getElementById('btnOpenScanner');
     const btnCloseModal = document.getElementById('btnCloseModal');
     const scannerModal = document.getElementById('scannerModal');
-    const scannerCard = document.getElementById('scannerCard');
     const productFrame = document.getElementById('productFrame');
     const placeholder = document.getElementById('placeholder');
 
@@ -321,15 +302,15 @@
     function onScanSuccess(decodedText, decodedResult) {
       const now = Date.now();
       if (decodedText === lastDecoded && (now - lastTime) < 2500) {
-        return; // hindari spam hasil yang sama dalam 2.5 detik
+        // kalau sama dalam 2.5 detik, abaikan (hindari spam hasil yang sama)
+        return;
       }
       lastDecoded = decodedText;
       lastTime = now;
 
       playBeep();
 
-      // Tampilkan detail produk di bawah; kamera tetap di atas sebagai preview
-      scannerCard.classList.add('has-product');
+      // Tampilkan detail produk (iframe) di area bawah popup
       placeholder.style.display = 'none';
       productFrame.style.display = 'block';
       productFrame.src = "/p/" + encodeURIComponent(decodedText);
@@ -348,7 +329,7 @@
             return;
           }
 
-          // Pilih kamera belakang jika tersedia
+          // Pilih kamera belakang jika ada
           let cameraId = cameras[0].id;
           const backCam = cameras.find(cam => {
             const label = (cam.label || "").toLowerCase();
@@ -365,13 +346,12 @@
             cameraId,
             {
               fps: 10,
-              // area scan (qrbox) ada di tengah video; karena kamera di atas,
-              // user cukup arahkan barcode ke area tengah preview kamera.
-              qrbox: { width: 260, height: 140 }
+              // Area scan dikecilkan agar nyaman di preview kecil (reader-box)
+              qrbox: { width: 220, height: 100 }
             },
             onScanSuccess,
             errorMessage => {
-              // error per-bacaan bisa diabaikan
+              // error per-capture bisa diabaikan
             }
           );
         }).catch(err => {
@@ -398,40 +378,41 @@
       }
     }
 
-    // Buka modal scanner
+    // Buka popup scanner
     btnOpenScanner.addEventListener('click', () => {
       scannerModal.classList.add('show');
+      productFrame.style.display = 'none';
+      placeholder.style.display = 'block';
       if (!scannerStarted) {
+        // sedikit delay supaya elemen #reader sudah ter-render
         setTimeout(startScanner, 80);
       }
     });
 
-    // Tutup modal scanner (stop kamera)
+    // Tutup popup scanner
     btnCloseModal.addEventListener('click', () => {
       scannerModal.classList.remove('show');
       productFrame.src = "";
       productFrame.style.display = 'none';
       placeholder.style.display = 'block';
-      scannerCard.classList.remove('has-product');
       stopScanner();
     });
 
-    // Klik area gelap di luar kartu → tutup modal
+    // Klik area gelap di luar kartu → tutup popup & stop kamera
     scannerModal.addEventListener('click', (e) => {
       if (e.target === scannerModal) {
         scannerModal.classList.remove('show');
         productFrame.src = "";
         productFrame.style.display = 'none';
         placeholder.style.display = 'block';
-        scannerCard.classList.remove('has-product');
         stopScanner();
       }
     });
 
-    // Inisialisasi: sebelum ada produk, sembunyikan iframe
+    // Pastikan iframe disembunyikan sebelum ada produk
     productFrame.style.display = 'none';
 
-    // Opsional: saat user keluar halaman, matikan kamera
+    // Stop kamera kalau user menutup tab / pindah halaman
     window.addEventListener('beforeunload', () => {
       stopScanner();
     });
