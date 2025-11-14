@@ -17,7 +17,6 @@
       justify-content: center;
       align-items: center;
       padding: 16px;
-      transition: background 0.18s ease;
     }
     .wrap {
       width: 100%;
@@ -29,15 +28,7 @@
       border: 1px solid #1f2937;
       padding: 18px 16px 20px;
       box-shadow: 0 22px 40px rgba(0,0,0,0.7);
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.18s ease, box-shadow 0.18s ease;
     }
-    body.product-open .card {
-      transform: translateY(-4px);
-      box-shadow: 0 18px 40px rgba(0,0,0,0.85);
-    }
-
     .title {
       text-align: center;
       font-size: 22px;
@@ -49,35 +40,6 @@
       color: #9ca3af;
       margin: 0 0 14px;
     }
-
-    .scanner-box {
-      border-radius: 14px;
-      overflow: hidden;
-      background: #020617;
-      border: 1px solid #1f2937;
-      min-height: 260px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      transition:
-        min-height 0.22s ease,
-        transform 0.22s ease,
-        box-shadow 0.22s ease,
-        opacity 0.22s ease;
-    }
-    #reader {
-      width: 100%;
-      max-width: 100%;
-    }
-
-    /* Saat panel produk terbuka → kamera jadi preview kecil */
-    body.product-open .scanner-box {
-      min-height: 110px;
-      transform: translateY(-2px) scale(0.96);
-      box-shadow: 0 10px 26px rgba(0,0,0,0.7);
-      opacity: 0.78;
-    }
-
     .btn-row {
       display: flex;
       gap: 10px;
@@ -111,7 +73,6 @@
       transform: translateY(1px) scale(0.99);
       box-shadow: none;
     }
-
     .hint {
       margin-top: 10px;
       font-size: 12px;
@@ -123,57 +84,50 @@
       font-weight: 500;
     }
 
-    /* Panel detail produk sebagai bottom sheet (proporsi lebih besar) */
-    .product-panel-backdrop {
+    /* MODAL: kamera + detail produk */
+    .modal-backdrop {
       position: fixed;
       inset: 0;
+      background: rgba(15,23,42,0.95);
       display: none;
-      align-items: flex-end;
+      align-items: center;
       justify-content: center;
-      padding: 0 10px 10px;
-      background: linear-gradient(to top, rgba(15,23,42,0.96), transparent 45%);
-      z-index: 40;
-      pointer-events: none;
-      transition: background 0.18s ease;
+      padding: 14px;
+      z-index: 50;
     }
-    .product-panel-backdrop.show {
+    .modal-backdrop.show {
       display: flex;
-      pointer-events: auto;
     }
-
-    .product-panel {
+    .modal-card {
+      position: relative;
+      background: #020617;
+      border-radius: 18px;
+      border: 1px solid #1f2937;
       width: 100%;
       max-width: 520px;
-      background: #020617;
-      border-radius: 20px 20px 14px 14px;
-      border: 1px solid #1f2937;
-      box-shadow: 0 24px 50px rgba(0,0,0,0.9);
-      overflow: hidden;
-      max-height: 75vh;
-      min-height: 58vh;
+      height: min(640px, 100vh - 32px);
+      box-shadow: 0 24px 50px rgba(0,0,0,0.85);
       display: flex;
       flex-direction: column;
-      transform: translateY(18px);
-      opacity: 0;
-      transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+      overflow: hidden;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
     }
-    .product-panel-backdrop.show .product-panel {
-      transform: translateY(0);
-      opacity: 1;
+    .modal-card.has-product {
+      transform: translateY(-3px);
+      box-shadow: 0 20px 45px rgba(0,0,0,0.9);
     }
-
-    .product-header {
+    .modal-header {
       padding: 10px 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid #111827;
     }
-    .product-header span {
+    .modal-header span {
       font-size: 14px;
       color: #9ca3af;
     }
-    .product-close {
+    .modal-close {
       width: 26px;
       height: 26px;
       border-radius: 999px;
@@ -188,30 +142,95 @@
       line-height: 1;
       transition: transform 0.1s ease, box-shadow 0.1s ease, border-color 0.1s ease;
     }
-    .product-close:hover {
+    .modal-close:hover {
       border-color: #e5e7eb;
       box-shadow: 0 0 0 1px rgba(148,163,184,0.7);
       transform: translateY(-1px);
     }
-    .product-body {
+    .modal-body {
       flex: 1;
-      padding: 6px 8px 8px;
+      display: flex;
+      flex-direction: column;
+      background: #020617;
     }
-    .product-body iframe {
+
+    .modal-camera {
+      padding: 10px 10px 6px;
+      transition: padding 0.18s ease;
+    }
+    .camera-label {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 6px;
+      text-align: left;
+    }
+    .reader-box {
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid #1f2937;
+      background: #020617;
+      height: 260px;
+      max-height: 260px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition:
+        height 0.22s ease,
+        max-height 0.22s ease,
+        box-shadow 0.22s ease,
+        opacity 0.22s ease;
+    }
+    #reader {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    /* Setelah produk pertama discan → kamera mengecil jadi preview atas */
+    .modal-card.has-product .reader-box {
+      height: 120px;
+      max-height: 120px;
+      box-shadow: 0 10px 26px rgba(0,0,0,0.7);
+      opacity: 0.85;
+    }
+
+    .modal-divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, #1f2937, transparent);
+      margin: 4px 8px 4px;
+    }
+    .modal-product {
+      flex: 1;
+      padding: 4px 8px 10px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .modal-card.has-product .modal-product {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .modal-product iframe {
       width: 100%;
       height: 100%;
       border-radius: 14px;
       border: 1px solid #1f2937;
       background: #020617;
     }
+    .modal-placeholder {
+      font-size: 12px;
+      color: #6b7280;
+      text-align: center;
+      padding: 18px 10px;
+    }
 
     @media (max-width: 480px) {
       .card { padding: 16px 14px 18px; }
       .title { font-size: 20px; }
       .subtitle { font-size: 12px; }
-      .product-panel {
-        max-height: 78vh;
-        min-height: 60vh;
+      .modal-card { height: calc(100vh - 24px); }
+      .reader-box { height: 230px; }
+      .modal-card.has-product .reader-box {
+        height: 120px;
       }
     }
   </style>
@@ -227,12 +246,8 @@
         Tekan tombol di bawah untuk membuka kamera, lalu arahkan ke barcode produk.
       </p>
 
-      <div class="scanner-box">
-        <div id="reader"></div>
-      </div>
-
       <div class="btn-row">
-        <button id="btnStart" class="btn btn-primary">
+        <button id="btnOpenScanner" class="btn btn-primary">
           Mulai Scan
         </button>
         <button id="btnDatabase" class="btn btn-secondary" onclick="window.location.href='{{ url_for('login') }}'">
@@ -241,21 +256,33 @@
       </div>
 
       <p class="hint">
-        Setiap barcode terbaca, panel <span>detail produk</span> akan muncul dari bawah.
-        Kamera tetap aktif sebagai <span>preview atas</span>.
+        Setelah barcode terbaca, kamera akan menyusut menjadi <span>preview di atas</span>,
+        dan panel <span>detail produk</span> muncul di bawah.
       </p>
     </div>
   </div>
 
-  <!-- Panel detail produk (bottom sheet) -->
-  <div id="productPanelBackdrop" class="product-panel-backdrop">
-    <div class="product-panel">
-      <div class="product-header">
-        <span>Detail Produk</span>
-        <button id="btnCloseProduct" class="product-close" type="button">&times;</button>
+  <!-- MODAL: kamera + detail produk -->
+  <div id="scannerModal" class="modal-backdrop">
+    <div id="scannerCard" class="modal-card">
+      <div class="modal-header">
+        <span>Scan Barcode &amp; Detail Produk</span>
+        <button class="modal-close" id="btnCloseModal" type="button">&times;</button>
       </div>
-      <div class="product-body">
-        <iframe id="productFrame" src="" title="Detail Produk"></iframe>
+      <div class="modal-body">
+        <div class="modal-camera">
+          <div class="camera-label">Kamera aktif &ndash; arahkan barcode ke area tengah kotak scan.</div>
+          <div class="reader-box">
+            <div id="reader"></div>
+          </div>
+        </div>
+        <div class="modal-divider"></div>
+        <div class="modal-product">
+          <iframe id="productFrame" src="" title="Detail Produk"></iframe>
+          <div id="placeholder" class="modal-placeholder">
+            Belum ada barcode yang discan. Arahkan kamera ke barcode untuk melihat detail produk.
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -266,10 +293,12 @@
     let lastDecoded = null;
     let lastTime = 0;
 
-    const btnStart = document.getElementById('btnStart');
-    const productPanelBackdrop = document.getElementById('productPanelBackdrop');
-    const btnCloseProduct = document.getElementById('btnCloseProduct');
+    const btnOpenScanner = document.getElementById('btnOpenScanner');
+    const btnCloseModal = document.getElementById('btnCloseModal');
+    const scannerModal = document.getElementById('scannerModal');
+    const scannerCard = document.getElementById('scannerCard');
     const productFrame = document.getElementById('productFrame');
+    const placeholder = document.getElementById('placeholder');
 
     function playBeep() {
       try {
@@ -292,16 +321,17 @@
     function onScanSuccess(decodedText, decodedResult) {
       const now = Date.now();
       if (decodedText === lastDecoded && (now - lastTime) < 2500) {
-        return; // hindari spam jika text sama dalam 2.5 detik
+        return; // hindari spam hasil yang sama dalam 2.5 detik
       }
       lastDecoded = decodedText;
       lastTime = now;
 
       playBeep();
 
-      // Tampilkan panel produk, kamera jadi preview
-      document.body.classList.add('product-open');
-      productPanelBackdrop.classList.add('show');
+      // Tampilkan detail produk di bawah; kamera tetap di atas sebagai preview
+      scannerCard.classList.add('has-product');
+      placeholder.style.display = 'none';
+      productFrame.style.display = 'block';
       productFrame.src = "/p/" + encodeURIComponent(decodedText);
     }
 
@@ -335,12 +365,13 @@
             cameraId,
             {
               fps: 10,
-              // qrbox disesuaikan agar nyaman di preview atas dan saat kamera besar
-              qrbox: { width: 220, height: 120 }
+              // area scan (qrbox) ada di tengah video; karena kamera di atas,
+              // user cukup arahkan barcode ke area tengah preview kamera.
+              qrbox: { width: 260, height: 140 }
             },
             onScanSuccess,
             errorMessage => {
-              // error per bacaan bisa diabaikan
+              // error per-bacaan bisa diabaikan
             }
           );
         }).catch(err => {
@@ -367,27 +398,40 @@
       }
     }
 
-    btnStart.addEventListener('click', () => {
-      startScanner();
-    });
-
-    btnCloseProduct.addEventListener('click', () => {
-      productPanelBackdrop.classList.remove('show');
-      document.body.classList.remove('product-open');
-      productFrame.src = "";
-      // kamera tetap hidup dan terus scan di preview atas
-    });
-
-    // Klik area gelap di luar panel → tutup panel saja (kamera tetap)
-    productPanelBackdrop.addEventListener('click', (e) => {
-      if (e.target === productPanelBackdrop) {
-        productPanelBackdrop.classList.remove('show');
-        document.body.classList.remove('product-open');
-        productFrame.src = "";
+    // Buka modal scanner
+    btnOpenScanner.addEventListener('click', () => {
+      scannerModal.classList.add('show');
+      if (!scannerStarted) {
+        setTimeout(startScanner, 80);
       }
     });
 
-    // Opsional: stop kamera kalau user meninggalkan halaman
+    // Tutup modal scanner (stop kamera)
+    btnCloseModal.addEventListener('click', () => {
+      scannerModal.classList.remove('show');
+      productFrame.src = "";
+      productFrame.style.display = 'none';
+      placeholder.style.display = 'block';
+      scannerCard.classList.remove('has-product');
+      stopScanner();
+    });
+
+    // Klik area gelap di luar kartu → tutup modal
+    scannerModal.addEventListener('click', (e) => {
+      if (e.target === scannerModal) {
+        scannerModal.classList.remove('show');
+        productFrame.src = "";
+        productFrame.style.display = 'none';
+        placeholder.style.display = 'block';
+        scannerCard.classList.remove('has-product');
+        stopScanner();
+      }
+    });
+
+    // Inisialisasi: sebelum ada produk, sembunyikan iframe
+    productFrame.style.display = 'none';
+
+    // Opsional: saat user keluar halaman, matikan kamera
     window.addEventListener('beforeunload', () => {
       stopScanner();
     });
