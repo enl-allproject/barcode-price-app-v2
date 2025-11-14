@@ -17,7 +17,7 @@
       justify-content: center;
       align-items: center;
       padding: 16px;
-      transition: background 0.15s ease;
+      transition: background 0.18s ease;
     }
     .wrap {
       width: 100%;
@@ -31,7 +31,13 @@
       box-shadow: 0 22px 40px rgba(0,0,0,0.7);
       position: relative;
       overflow: hidden;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
     }
+    body.product-open .card {
+      transform: translateY(-4px);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.85);
+    }
+
     .title {
       text-align: center;
       font-size: 22px;
@@ -53,18 +59,23 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      transition: min-height 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+      transition:
+        min-height 0.22s ease,
+        transform 0.22s ease,
+        box-shadow 0.22s ease,
+        opacity 0.22s ease;
     }
     #reader {
       width: 100%;
       max-width: 100%;
     }
 
-    /* Saat panel produk terbuka: kamera jadi preview (lebih kecil) */
+    /* Saat panel produk terbuka → kamera jadi preview kecil */
     body.product-open .scanner-box {
-      min-height: 140px;
-      transform: translateY(-2px) scale(0.97);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+      min-height: 110px;
+      transform: translateY(-2px) scale(0.96);
+      box-shadow: 0 10px 26px rgba(0,0,0,0.7);
+      opacity: 0.78;
     }
 
     .btn-row {
@@ -112,7 +123,7 @@
       font-weight: 500;
     }
 
-    /* Panel detail produk sebagai bottom sheet */
+    /* Panel detail produk sebagai bottom sheet (proporsi lebih besar) */
     .product-panel-backdrop {
       position: fixed;
       inset: 0;
@@ -122,12 +133,14 @@
       padding: 0 10px 10px;
       background: linear-gradient(to top, rgba(15,23,42,0.96), transparent 45%);
       z-index: 40;
-      pointer-events: none; /* supaya klik di atas tetap ke card, nanti di panel-nya diaktifkan */
+      pointer-events: none;
+      transition: background 0.18s ease;
     }
     .product-panel-backdrop.show {
       display: flex;
       pointer-events: auto;
     }
+
     .product-panel {
       width: 100%;
       max-width: 520px;
@@ -136,17 +149,20 @@
       border: 1px solid #1f2937;
       box-shadow: 0 24px 50px rgba(0,0,0,0.9);
       overflow: hidden;
-      max-height: 70vh;
+      /* proporsi utama: ambil ~75% tinggi layar */
+      max-height: 75vh;
+      min-height: 58vh;
       display: flex;
       flex-direction: column;
-      transform: translateY(12px);
+      transform: translateY(18px);
       opacity: 0;
-      transition: transform 0.18s ease, opacity 0.18s ease;
+      transition: transform 0.2s ease-out, opacity 0.2s ease-out;
     }
     .product-panel-backdrop.show .product-panel {
       transform: translateY(0);
       opacity: 1;
     }
+
     .product-header {
       padding: 10px 12px;
       display: flex;
@@ -171,6 +187,12 @@
       cursor: pointer;
       font-size: 16px;
       line-height: 1;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, border-color 0.1s ease;
+    }
+    .product-close:hover {
+      border-color: #e5e7eb;
+      box-shadow: 0 0 0 1px rgba(148,163,184,0.7);
+      transform: translateY(-1px);
     }
     .product-body {
       flex: 1;
@@ -188,7 +210,10 @@
       .card { padding: 16px 14px 18px; }
       .title { font-size: 20px; }
       .subtitle { font-size: 12px; }
-      .product-panel { max-height: 75vh; }
+      .product-panel {
+        max-height: 78vh;
+        min-height: 60vh;
+      }
     }
   </style>
 
@@ -217,7 +242,8 @@
       </div>
 
       <p class="hint">
-        Setiap barcode terbaca, akan muncul <span>popup detail produk</span> dan kamera tetap aktif sebagai preview.
+        Setiap barcode terbaca, panel <span>detail produk</span> akan muncul dari bawah.
+        Kamera tetap aktif sebagai <span>preview kecil</span>.
       </p>
     </div>
   </div>
@@ -260,20 +286,21 @@
         gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
         osc.stop(ctx.currentTime + 0.15);
       } catch (e) {
-        // diam jika tidak didukung
+        // jika tidak didukung, diam saja
       }
     }
 
     function onScanSuccess(decodedText, decodedResult) {
       const now = Date.now();
       if (decodedText === lastDecoded && (now - lastTime) < 2500) {
-        return; // hindari spam hasil yang sama
+        return; // hindari spam jika text sama dalam 2.5 detik
       }
       lastDecoded = decodedText;
       lastTime = now;
 
       playBeep();
-      // Tampilkan panel produk
+
+      // Tampilkan panel produk, kamera jadi preview
       document.body.classList.add('product-open');
       productPanelBackdrop.classList.add('show');
       productFrame.src = "/p/" + encodeURIComponent(decodedText);
@@ -313,7 +340,7 @@
             },
             onScanSuccess,
             errorMessage => {
-              // error per-bacaan bisa diabaikan
+              // error per bacaan bisa diabaikan
             }
           );
         }).catch(err => {
@@ -348,10 +375,10 @@
       productPanelBackdrop.classList.remove('show');
       document.body.classList.remove('product-open');
       productFrame.src = "";
-      // Scanner tetap jalan sebagai preview
+      // kamera tetap hidup sebagai preview di atas
     });
 
-    // Klik di luar panel (area gelap) juga menutup panel
+    // Klik area gelap di luar panel → tutup panel saja (kamera tetap)
     productPanelBackdrop.addEventListener('click', (e) => {
       if (e.target === productPanelBackdrop) {
         productPanelBackdrop.classList.remove('show');
@@ -360,7 +387,7 @@
       }
     });
 
-    // Opsional: ketika user meninggalkan halaman, stop kamera
+    // Opsional: stop kamera kalau user meninggalkan halaman
     window.addEventListener('beforeunload', () => {
       stopScanner();
     });
