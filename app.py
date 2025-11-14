@@ -16,6 +16,7 @@ from flask_login import (
 )
 from dotenv import load_dotenv, find_dotenv
 from werkzeug.security import check_password_hash
+from excel_store import merge_upsert
 
 # ======================================================
 # ENV LOADER
@@ -219,26 +220,28 @@ def import_excel():
     if request.method == "POST":
         f = request.files.get("file")
         if not f:
-            flash("Tidak ada file diunggah.", "error")
+            flash("Tidak ada file yang diunggah.", "error")
             return redirect(url_for("import_excel"))
 
         try:
             filename = (f.filename or "").lower()
-            df = pd.read_excel(f) if filename.endswith(".xlsx") else pd.read_csv(f)
 
-            # Validasi kolom wajib
-            missing = [c for c in REQUIRED_COLUMNS if c not in df.columns]
-            if missing:
-                flash(f"Kolom wajib hilang: {', '.join(missing)}", "error")
-                return redirect(url_for("import_excel"))
+            # Baca mentah dulu (biarkan excel_store yang normalisasi)
+            if filename.endswith(".csv"):
+                raw_df = pd.read_csv(f)
+            else:
+                raw_df = pd.read_excel(f)
 
-            df["id"] = df["id"].astype(str)
-
-            _save_products_df(df)
+            # Serahkan ke excel_store untuk dibersihkan + disimpan
+            merge_upsert(raw_df)
 
             flash("Import berhasil!", "ok")
             return redirect(url_for("database"))
 
+        except ValueError as e:
+            # error validasi dari _normalize_df (misal kolom id/nama hilang)
+            flash(f"Gagal import: {e}", "error")
+            return redirect(url_for("import_excel"))
         except Exception as e:
             flash(f"Gagal import: {e}", "error")
             return redirect(url_for("import_excel"))
