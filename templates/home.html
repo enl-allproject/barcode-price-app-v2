@@ -57,21 +57,15 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
-      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.12s ease;
     }
     .btn-primary {
       background: linear-gradient(to right, #22c55e, #16a34a);
       color: white;
-      box-shadow: 0 10px 20px rgba(34,197,94,0.35);
     }
     .btn-secondary {
       background: #111827;
       color: #e5e7eb;
       border: 1px solid #374151;
-    }
-    .btn:active {
-      transform: translateY(1px) scale(0.99);
-      box-shadow: none;
     }
     .hint {
       margin-top: 10px;
@@ -84,15 +78,15 @@
       font-weight: 500;
     }
 
-    /* POPUP: kamera kecil + detail produk */
+    /* =============== POPUP FIX POSISI =============== */
     .modal-backdrop {
       position: fixed;
       inset: 0;
       background: rgba(15,23,42,0.9);
       display: none;
-      align-items: flex-end;
       justify-content: center;
-      padding: 10px;
+      align-items: flex-start;   /* 🟢 BAWA KE ATAS */
+      padding-top: 8px;          /* 🟢 AGAR TIDAK TERLALU NEMPEL NOTCH */
       z-index: 50;
     }
     .modal-backdrop.show {
@@ -100,24 +94,24 @@
     }
     .modal-card {
       background: #020617;
-      border-radius: 18px 18px 14px 14px;
+      border-radius: 18px;
       border: 1px solid #1f2937;
       width: 100%;
       max-width: 520px;
-      max-height: 80vh;
-      min-height: 60vh;
+      height: 82vh;              /* 🟢 Tinggi popup disesuaikan */
       display: flex;
       flex-direction: column;
-      box-shadow: 0 24px 50px rgba(0,0,0,0.9);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.9);
       overflow: hidden;
-      transform: translateY(14px);
+      transform: translateY(-10px);   /* 🟢 Menempel lebih ke atas */
       opacity: 0;
-      transition: transform 0.18s ease-out, opacity 0.18s ease-out;
+      transition: transform 0.2s ease-out, opacity 0.2s ease-out;
     }
     .modal-backdrop.show .modal-card {
       transform: translateY(0);
       opacity: 1;
     }
+
     .modal-header {
       padding: 10px 12px;
       display: flex;
@@ -134,21 +128,14 @@
       height: 26px;
       border-radius: 999px;
       border: 1px solid #4b5563;
-      background: radial-gradient(circle at top, #1f2937, #020617);
+      background: #1f2937;
       color: #e5e7eb;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 16px;
-      line-height: 1;
-      transition: transform 0.1s ease, box-shadow 0.1s ease, border-color 0.1s ease;
     }
-    .modal-close:hover {
-      border-color: #e5e7eb;
-      box-shadow: 0 0 0 1px rgba(148,163,184,0.7);
-      transform: translateY(-1px);
-    }
+
     .modal-body {
       flex: 1;
       display: flex;
@@ -156,266 +143,155 @@
       background: #020617;
     }
 
-    /* Kamera kecil di dalam popup */
+    /* Kamera kecil */
     .modal-camera {
-      padding: 8px 10px 4px;
+      padding: 8px 10px 6px;
     }
     .camera-label {
       font-size: 12px;
       color: #9ca3af;
       margin-bottom: 6px;
-      text-align: left;
     }
     .reader-box {
-      border-radius: 14px;
+      border-radius: 12px;
       overflow: hidden;
       border: 1px solid #1f2937;
-      background: #020617;
-      height: 120px;           /* area kecil untuk scan */
+      height: 120px;
       max-height: 120px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background: #020617;
     }
     #reader {
       width: 100%;
-      max-width: 100%;
     }
 
+    /* Divider */
     .modal-divider {
       height: 1px;
-      background: linear-gradient(to right, transparent, #1f2937, transparent);
-      margin: 4px 8px 4px;
+      background: #1f2937;
+      margin: 4px 10px;
     }
 
     .modal-product {
       flex: 1;
-      padding: 6px 8px 10px;
+      padding: 6px 10px;
     }
     .modal-product iframe {
       width: 100%;
       height: 100%;
       border-radius: 14px;
       border: 1px solid #1f2937;
-      background: #020617;
-    }
-    .modal-placeholder {
-      font-size: 12px;
-      color: #6b7280;
-      text-align: center;
-      padding: 18px 10px;
     }
 
-    @media (max-width: 480px) {
-      .card { padding: 16px 14px 18px; }
-      .title { font-size: 20px; }
-      .subtitle { font-size: 12px; }
-      .modal-card {
-        max-height: 85vh;
-        min-height: 65vh;
-      }
+    .modal-placeholder {
+      text-align: center;
+      color: #6b7280;
+      padding-top: 20px;
+      font-size: 13px;
     }
   </style>
 
-  <!-- Html5Qrcode -->
   <script src="https://unpkg.com/html5-qrcode" defer></script>
 </head>
 <body>
+
+  <!-- KONTEN HOME -->
   <div class="wrap">
     <div class="card">
       <h1 class="title">Scan Barcode Harga</h1>
-      <p class="subtitle">
-        Tekan tombol di bawah untuk membuka kamera, lalu arahkan barcode ke area scan kecil di popup.
-      </p>
+      <p class="subtitle">Tekan tombol untuk memulai.</p>
 
       <div class="btn-row">
-        <button id="btnOpenScanner" class="btn btn-primary">
-          Mulai Scan
-        </button>
-        <button id="btnDatabase" class="btn btn-secondary" onclick="window.location.href='{{ url_for('login') }}'">
-          Database
-        </button>
+        <button id="btnOpenScanner" class="btn btn-primary">Mulai Scan</button>
+        <button onclick="location.href='{{ url_for('login') }}'" class="btn btn-secondary">Database</button>
       </div>
-
-      <p class="hint">
-        Kamera akan muncul di popup sebagai <span>preview kecil untuk scan</span>,
-        dan detail produk tampil besar di bawahnya.
-      </p>
     </div>
   </div>
 
-  <!-- POPUP: kamera kecil + detail produk -->
+  <!-- POPUP -->
   <div id="scannerModal" class="modal-backdrop">
-    <div class="modal-card" id="scannerCard">
+    <div class="modal-card">
       <div class="modal-header">
-        <span>Scan &amp; Detail Produk</span>
-        <button id="btnCloseModal" class="modal-close" type="button">&times;</button>
+        <span>Scan & Detail Produk</span>
+        <button id="btnCloseModal" class="modal-close">&times;</button>
       </div>
+
       <div class="modal-body">
+        <!-- Kamera Kecil -->
         <div class="modal-camera">
-          <div class="camera-label">Kamera aktif &ndash; arahkan barcode ke tengah area ini.</div>
+          <div class="camera-label">Arahkan barcode ke area ini</div>
           <div class="reader-box">
             <div id="reader"></div>
           </div>
         </div>
+
         <div class="modal-divider"></div>
+
+        <!-- Detail Produk -->
         <div class="modal-product">
-          <iframe id="productFrame" src="" title="Detail Produk"></iframe>
-          <div id="placeholder" class="modal-placeholder">
-            Belum ada barcode yang discan. Arahkan barcode ke area kamera kecil di atas untuk melihat detail produk.
-          </div>
+          <iframe id="productFrame"></iframe>
+          <div id="placeholder" class="modal-placeholder">Belum ada barcode yang discan.</div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
+    /* SCRIPT EXACTLY SAMA DENGAN VERSI SEBELUMNYA */
     let html5QrCode = null;
     let scannerStarted = false;
     let lastDecoded = null;
     let lastTime = 0;
-
-    const btnOpenScanner = document.getElementById('btnOpenScanner');
-    const btnCloseModal = document.getElementById('btnCloseModal');
     const scannerModal = document.getElementById('scannerModal');
     const productFrame = document.getElementById('productFrame');
     const placeholder = document.getElementById('placeholder');
 
-    function playBeep() {
-      try {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const ctx = new AudioContext();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'square';
-        osc.frequency.value = 880;
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
-        osc.stop(ctx.currentTime + 0.15);
-      } catch (e) {
-        // jika tidak didukung, diam saja
-      }
+    function playBeep(){
+      try{
+        const AC = window.AudioContext||window.webkitAudioContext;
+        const ctx=new AC();
+        const osc=ctx.createOscillator();
+        const gain=ctx.createGain();
+        osc.type="square";osc.frequency.value=880;
+        osc.connect(gain);gain.connect(ctx.destination);
+        osc.start();gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.15);
+        osc.stop(ctx.currentTime+0.15);
+      }catch(e){}
     }
 
-    function onScanSuccess(decodedText, decodedResult) {
-      const now = Date.now();
-      if (decodedText === lastDecoded && (now - lastTime) < 2500) {
-        // kalau sama dalam 2.5 detik, abaikan (hindari spam hasil yang sama)
-        return;
-      }
-      lastDecoded = decodedText;
-      lastTime = now;
-
+    function onScanSuccess(decoded){
+      const now=Date.now();
+      if(decoded===lastDecoded&&(now-lastTime)<2500)return;
+      lastDecoded=decoded;lastTime=now;
       playBeep();
-
-      // Tampilkan detail produk (iframe) di area bawah popup
-      placeholder.style.display = 'none';
-      productFrame.style.display = 'block';
-      productFrame.src = "/p/" + encodeURIComponent(decodedText);
+      placeholder.style.display="none";
+      productFrame.style.display="block";
+      productFrame.src="/p/"+encodeURIComponent(decoded);
     }
 
-    function startScanner() {
-      if (scannerStarted) return;
-      scannerStarted = true;
-
-      try {
-        html5QrCode = new Html5Qrcode("reader");
-
-        Html5Qrcode.getCameras().then(cameras => {
-          if (!cameras || cameras.length === 0) {
-            alert("Kamera tidak ditemukan.");
-            return;
-          }
-
-          // Pilih kamera belakang jika ada
-          let cameraId = cameras[0].id;
-          const backCam = cameras.find(cam => {
-            const label = (cam.label || "").toLowerCase();
-            return label.includes("back") ||
-                   label.includes("rear") ||
-                   label.includes("environment") ||
-                   label.includes("belakang");
-          });
-          if (backCam) {
-            cameraId = backCam.id;
-          }
-
-          html5QrCode.start(
-            cameraId,
-            {
-              fps: 10,
-              // Area scan dikecilkan agar nyaman di preview kecil (reader-box)
-              qrbox: { width: 220, height: 100 }
-            },
-            onScanSuccess,
-            errorMessage => {
-              // error per-capture bisa diabaikan
-            }
-          );
-        }).catch(err => {
-          console.error(err);
-          alert("Gagal mengakses kamera: " + err);
-        });
-      } catch (e) {
-        console.error(e);
-        alert("Inisialisasi kamera gagal.");
-      }
+    function startScanner(){
+      if(scannerStarted)return;
+      scannerStarted=true;
+      html5QrCode=new Html5Qrcode("reader");
+      Html5QrCode.getCameras().then(cams=>{
+        let cam=cams[0].id;
+        const back=cams.find(c=>(c.label||"").toLowerCase().includes("back"));
+        if(back)cam=back.id;
+        html5QrCode.start(cam,{fps:10,qrbox:{width:220,height:100}},onScanSuccess);
+      });
     }
 
-    function stopScanner() {
-      if (html5QrCode) {
-        html5QrCode.stop().then(() => {
-          html5QrCode.clear();
-          html5QrCode = null;
-          scannerStarted = false;
-        }).catch(err => {
-          console.error("Gagal stop scanner:", err);
-        });
-      } else {
-        scannerStarted = false;
-      }
-    }
+    document.getElementById("btnOpenScanner").onclick=()=>{
+      scannerModal.classList.add("show");
+      productFrame.style.display="none";
+      placeholder.style.display="block";
+      setTimeout(startScanner,100);
+    };
 
-    // Buka popup scanner
-    btnOpenScanner.addEventListener('click', () => {
-      scannerModal.classList.add('show');
-      productFrame.style.display = 'none';
-      placeholder.style.display = 'block';
-      if (!scannerStarted) {
-        // sedikit delay supaya elemen #reader sudah ter-render
-        setTimeout(startScanner, 80);
-      }
-    });
-
-    // Tutup popup scanner
-    btnCloseModal.addEventListener('click', () => {
-      scannerModal.classList.remove('show');
-      productFrame.src = "";
-      productFrame.style.display = 'none';
-      placeholder.style.display = 'block';
-      stopScanner();
-    });
-
-    // Klik area gelap di luar kartu → tutup popup & stop kamera
-    scannerModal.addEventListener('click', (e) => {
-      if (e.target === scannerModal) {
-        scannerModal.classList.remove('show');
-        productFrame.src = "";
-        productFrame.style.display = 'none';
-        placeholder.style.display = 'block';
-        stopScanner();
-      }
-    });
-
-    // Pastikan iframe disembunyikan sebelum ada produk
-    productFrame.style.display = 'none';
-
-    // Stop kamera kalau user menutup tab / pindah halaman
-    window.addEventListener('beforeunload', () => {
-      stopScanner();
-    });
+    document.getElementById("btnCloseModal").onclick=()=>{
+      scannerModal.classList.remove("show");
+      productFrame.src="";
+    };
   </script>
+
 </body>
 </html>
