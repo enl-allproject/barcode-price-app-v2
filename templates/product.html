@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <title>{{ p.nama_produk }} - Detail Produk</title>
+  <title>{{ p.nama }} - Detail Produk</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root {
@@ -361,8 +361,14 @@
     <div class="card">
       <div class="card-header">
         <div class="title-wrap">
-          <h1 class="title">{{ p.nama_produk }}</h1>
-          <p class="price">Rp {{ "{:,}".format(p.harga).replace(",", ".") }}</p>
+          <h1 class="title">{{ p.nama }}</h1>
+          <p class="price">
+            {% if p.harga_text %}
+              {{ p.harga_text }}
+            {% else %}
+              -
+            {% endif %}
+          </p>
           <div class="chip-price">
             <span class="chip-dot"></span>
             <span>Harga saat ini</span>
@@ -410,7 +416,7 @@
         </div>
       </div>
 
-      <!-- Kartu Barcode (default HIDDEN, tampil kalau icon diklik) -->
+      <!-- Kartu Barcode -->
       <div class="section">
         <div id="barcodeCard" class="barcode-card">
           <div class="barcode-label">Barcode &amp; ID Produk</div>
@@ -430,7 +436,7 @@
 
   <script>
     const idVal = {{ p.id|tojson }};
-    const productName = {{ p.nama_produk|tojson }};
+    const productName = {{ p.nama|tojson }};
     let barcodeRendered = false;
     let barcodeVisible = false; // DEFAULT: BARCODE TERSEMBUNYI
 

@@ -1,10 +1,9 @@
-# ============================================================
-# app.py — FINAL (MENDUKUNG STRUKTUR KOLOM BARU)
-# ============================================================
+# app.py — FINAL: baca Excel langsung, harga & angka sebagai TEKS
 
 import os
 from io import BytesIO
 from datetime import timedelta
+
 import pandas as pd
 from flask import (
     Flask, render_template, request, redirect,
@@ -16,17 +15,16 @@ from flask_login import (
 )
 from dotenv import load_dotenv, find_dotenv
 from werkzeug.security import check_password_hash
-from excel_store import merge_upsert
 
 # ======================================================
 # ENV LOADER
 # ======================================================
 load_dotenv(find_dotenv(), override=True)
 
-APP_USER       = os.getenv("APP_USERNAME", "admin")
-APP_PASS       = os.getenv("APP_PASSWORD")
-APP_PASS_HASH  = os.getenv("APP_PASSWORD_HASH")
-SECRET_KEY     = os.getenv("SECRET_KEY", "dev-secret")
+APP_USER      = os.getenv("APP_USERNAME", "admin")
+APP_PASS      = os.getenv("APP_PASSWORD")           # plaintext mode (opsional)
+APP_PASS_HASH = os.getenv("APP_PASSWORD_HASH")      # hashed mode (opsional)
+SECRET_KEY    = os.getenv("SECRET_KEY", "dev-secret")
 
 # ======================================================
 # APP CONFIG
@@ -39,19 +37,13 @@ login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
 # ======================================================
-# FILE STORAGE (Excel + excel_store)
+# SIMPLE EXCEL STORAGE
 # ======================================================
-try:
-    from excel_store import load_products, save_products
-except Exception:
-    load_products = None
-    save_products = None
+BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR   = os.path.join(BASE_DIR, "data")
+DATA_FILE  = os.path.join(DATA_DIR, "data.xlsx")
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-FALLBACK_PATH = os.path.join(BASE_DIR, "products.xlsx")
-
-# Struktur kolom wajib (BARU)
-REQUIRED_COLUMNS = [
+DEFAULT_COLUMNS = [
     "id",
     "nama_produk",
     "hpp",
@@ -63,42 +55,65 @@ REQUIRED_COLUMNS = [
 ]
 
 
+def ensure_store_exists():
+    """Pastikan folder & file Excel ada."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+    if not os.path.exists(DATA_FILE):
+        df = pd.DataFrame(columns=DEFAULT_COLUMNS)
+        df.to_excel(DATA_FILE, index=False)
+
+
+def _normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Normalisasi nama kolom:
+    - lowercase
+    - strip spasi pinggir
+    - spasi di tengah diganti '_' (harga jual -> harga_jual)
+    """
+    new_cols = {}
+    for c in df.columns:
+        key = str(c).strip().lower().replace(" ", "_")
+        new_cols[c] = key
+    df = df.rename(columns=new_cols)
+    return df
+
+
 def _load_products_df() -> pd.DataFrame:
-    """Load product list dari excel_store atau fallback Excel."""
-    if load_products:
-        df = load_products()
-    elif os.path.exists(FALLBACK_PATH):
-        df = pd.read_excel(FALLBACK_PATH)
-    else:
-        df = pd.DataFrame(columns=REQUIRED_COLUMNS)
+    """Baca data dari data.xlsx, lalu normalisasi header."""
+    ensure_store_exists()
+    try:
+        df = pd.read_excel(DATA_FILE)
+    except Exception:
+        df = pd.DataFrame(columns=DEFAULT_COLUMNS)
 
-    # Normalisasi tipe id → string
-    if "id" in df.columns:
-        df["id"] = df["id"].astype(str)
+    df = _normalize_columns(df)
 
-    # Pastikan semua kolom tersedia
-    for col in REQUIRED_COLUMNS:
-        if col not in df.columns:
-            df[col] = ""
+    # pastikan kolom id selalu ada
+    if "id" not in df.columns:
+        df["id"] = ""
 
-    return df[REQUIRED_COLUMNS]
+    df["id"] = df["id"].astype(str).str.strip()
+    return df
 
 
 def _save_products_df(df: pd.DataFrame):
-    """Simpan DF via excel_store.save_products atau fallback Excel."""
-    df = df.copy()
+    """Simpan DataFrame ke data.xlsx dengan header yang sudah dinormalisasi."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+    df = _normalize_columns(df)
+    df.to_excel(DATA_FILE, index=False)
 
-    # Pastikan hanya kolom wajib yang disimpan
-    df = df[REQUIRED_COLUMNS]
 
-    # ID = string
-    df["id"] = df["id"].astype(str)
-
-    if save_products:
-        save_products(df)
-    else:
-        df.to_excel(FALLBACK_PATH, index=False)
-
+def _get_first_nonempty(row, candidates, default=""):
+    """Ambil nilai pertama yang tidak kosong dari beberapa nama kolom (sudah dinormalisasi)."""
+    for name in candidates:
+        if name in row.index:
+            val = row[name]
+            if pd.isna(val):
+                continue
+            text = str(val).strip()
+            if text != "":
+                return text
+    return default
 
 # ======================================================
 # LOGIN MODEL
@@ -111,7 +126,6 @@ class SimpleUser(UserMixin):
 @login_manager.user_loader
 def _load_user(uid: str):
     return SimpleUser(uid) if uid == APP_USER else None
-
 
 # ======================================================
 # AUTH ROUTES
@@ -129,10 +143,11 @@ def login():
         )
 
         ok = False
+
         if u == APP_USER:
             if APP_PASS_HASH:
                 ok = check_password_hash(APP_PASS_HASH, p)
-            elif APP_PASS:
+            elif APP_PASS is not None:
                 ok = (p == APP_PASS)
 
         if ok:
@@ -141,6 +156,7 @@ def login():
             return redirect(next_url)
 
         flash("Login gagal: username atau password salah.", "error")
+        return render_template("login.html")
 
     return render_template("login.html")
 
@@ -150,7 +166,6 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for("home"))
-
 
 # ======================================================
 # PAGE ROUTES
@@ -163,18 +178,39 @@ def home():
 @app.route("/p/<id_value>")
 def product_page(id_value):
     df = _load_products_df()
-    row = df[df["id"] == str(id_value)]
+    row_df = df[df["id"].astype(str) == str(id_value)]
 
-    if row.empty:
+    if row_df.empty:
         abort(404, "Produk tidak ditemukan")
 
-    p = row.iloc[0].to_dict()
+    row = row_df.iloc[0]
 
-    # Harga aman
-    try:
-        p["harga"] = int(float(p.get("harga", 0)))
-    except:
-        p["harga"] = 0
+    # nama produk: prioritaskan nama_produk, lalu nama, dll
+    nama = _get_first_nonempty(
+        row,
+        ["nama_produk", "nama", "nama_barang", "product_name"],
+        default="",
+    )
+
+    # harga: apa adanya dari kolom harga (atau harga_jual / price)
+    harga_text = _get_first_nonempty(
+        row,
+        ["harga", "harga_jual", "price"],
+        default="",
+    )
+
+    keterangan = _get_first_nonempty(
+        row,
+        ["keterangan", "deskripsi", "notes"],
+        default="",
+    )
+
+    p = {
+        "id": str(row.get("id", "")),
+        "nama": nama,
+        "harga_text": harga_text,
+        "keterangan": keterangan,
+    }
 
     return render_template("product.html", p=p)
 
@@ -183,21 +219,40 @@ def product_page(id_value):
 @login_required
 def database():
     df = _load_products_df()
-    records = df.to_dict(orient="records")
 
-    # Harga ke integer (kalau valid)
-    for r in records:
-        try:
-            r["harga"] = int(float(r["harga"]))
-        except:
-            pass
+    records = []
+    for _, row in df.iterrows():
+        rid = str(row.get("id", "")).strip()
+        if not rid:
+            continue
+
+        nama_produk = _get_first_nonempty(
+            row,
+            ["nama_produk", "nama", "nama_barang", "product_name"],
+            default="",
+        )
+
+        hpp_text      = _get_first_nonempty(row, ["hpp"], default="")
+        profit_text   = _get_first_nonempty(row, ["profit"], default="")
+        harga25_text  = _get_first_nonempty(row, ["harga_25"], default="")
+        harga_text    = _get_first_nonempty(row, ["harga", "harga_jual", "price"], default="")
+        sumber_text   = _get_first_nonempty(row, ["sumber", "source"], default="")
+        ket_text      = _get_first_nonempty(row, ["keterangan", "deskripsi", "notes"], default="")
+
+        records.append({
+            "id": rid,
+            "nama_produk": nama_produk,
+            "hpp": hpp_text,
+            "profit": profit_text,
+            "harga_25": harga25_text,
+            "harga": harga_text,
+            "sumber": sumber_text,
+            "keterangan": ket_text,
+        })
 
     return render_template("database.html", products=records)
 
 
-# ======================================================
-# EXPORT / IMPORT
-# ======================================================
 @app.route("/export-excel")
 @login_required
 def export_excel():
@@ -210,7 +265,7 @@ def export_excel():
         buf,
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         as_attachment=True,
-        download_name="products.xlsx",
+        download_name="products.xlsx"
     )
 
 
@@ -226,28 +281,29 @@ def import_excel():
         try:
             filename = (f.filename or "").lower()
 
-            # Baca mentah dulu (biarkan excel_store yang normalisasi)
+            # baca file mentah
             if filename.endswith(".csv"):
-                raw_df = pd.read_csv(f)
+                df = pd.read_csv(f)
             else:
-                raw_df = pd.read_excel(f)
+                df = pd.read_excel(f)
 
-            # Serahkan ke excel_store untuk dibersihkan + disimpan
-            merge_upsert(raw_df)
+            # normalisasi nama kolom sebelum simpan
+            df = _normalize_columns(df)
+
+            # pastikan ada kolom id
+            if "id" not in df.columns:
+                raise ValueError("File harus punya kolom 'id'.")
+
+            _save_products_df(df)
 
             flash("Import berhasil!", "ok")
             return redirect(url_for("database"))
 
-        except ValueError as e:
-            # error validasi dari _normalize_df (misal kolom id/nama hilang)
-            flash(f"Gagal import: {e}", "error")
-            return redirect(url_for("import_excel"))
         except Exception as e:
             flash(f"Gagal import: {e}", "error")
             return redirect(url_for("import_excel"))
 
     return render_template("import.html")
-
 
 # ======================================================
 # MAIN
